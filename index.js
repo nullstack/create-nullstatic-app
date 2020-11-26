@@ -44,15 +44,22 @@ async function crawl(port, path) {
   
 };
 
+async function copyManifest(port) {
+  const response = await fetch(`http://localhost:${port}/manifest.json`);
+  const json = await response.text();
+  writeFileSync(folder + '/manifest.json', json);
+}
+
 async function run() {
   rmdirSync(folder, {recursive: true});
   await execSync('npm run build');
-  const server = fork('.production/server.js', [], {silent: true});
+  const server = fork('.production/server.js', ['--static'], {silent: true});
   server.stdout.on('data', async (buffer) => {
     const lookup = 'production mode at http://127.0.0.1:';
     const message = buffer.toString();
     if(message.indexOf(lookup) > -1) {
       const port = parseInt(message.split(lookup)[1]);
+      await copyManifest(port);
       await crawl(port, '/');
       server.kill();
       copySync('public', folder);
