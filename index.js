@@ -59,8 +59,8 @@ async function run() {
     const message = buffer.toString();
     if(message.indexOf(lookup) > -1) {
       const port = parseInt(message.split(lookup)[1]);
-      await copyManifest(port);
       await crawl(port, '/');
+      await copyManifest(port);
       server.kill();
       copySync('public', folder);
       for(const file of readdirSync('.production')) {
