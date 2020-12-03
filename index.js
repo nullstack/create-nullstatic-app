@@ -26,6 +26,11 @@ async function crawl(port, path) {
 
   writeFileSync(folder + path + '/index.html', html);
 
+  const lookup = 'window.instances = ';
+  const json = html.split("\n").find((line) => line.indexOf(lookup) > -1).split(lookup)[1].slice(0, -1);
+  
+  writeFileSync(folder + path + '/index.json', json);
+
   const pattern = /<a href="(.*?)"/g;
   while(match=pattern.exec(html)){
     const link = match[1];
