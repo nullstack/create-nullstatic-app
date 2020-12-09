@@ -1,6 +1,6 @@
 {
   "name": "create-nullstatic-app",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Crawls every accessible link in your application and generates static HTML.",
   "repository": "github:nullstack/create-nullstatic-app",
   "author": "Mortaro",

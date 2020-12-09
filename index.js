@@ -14,6 +14,8 @@ const links = {};
 const {existsSync, mkdirSync, writeFileSync, copySync, readdirSync, rmdirSync} = require('fs-extra');
 const {execSync, fork} = require('child_process');
 
+let key;
+
 async function crawl(port, path) {
   
   links[path] = true;
@@ -26,6 +28,12 @@ async function crawl(port, path) {
 
   writeFileSync(folder + path + '/index.html', html);
 
+  if(key === undefined) {
+    const environmentLookup = 'window.environment = ';
+    const environment = html.split("\n").find((line) => line.indexOf(environmentLookup) > -1).split(environmentLookup)[1].slice(0, -1);
+    key = JSON.parse(environment).key;
+  }
+
   const instancesLookup = 'window.instances = ';
   const instances = html.split("\n").find((line) => line.indexOf(instancesLookup) > -1).split(instancesLookup)[1].slice(0, -1);
 
@@ -33,7 +41,7 @@ async function crawl(port, path) {
   const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
   
   const json = `{"instances": ${instances}, "page": ${page}}`;
-  writeFileSync(folder + path + '/index.json', json);
+  writeFileSync(folder + path + `/${key}.json`, json);
 
   const pattern = /<a href="(.*?)"/g;
   while(match=pattern.exec(html)){
@@ -74,7 +82,7 @@ async function run() {
       copySync('public', folder);
       for(const file of readdirSync('.production')) {
         if(file.startsWith('client')) {
-          copySync('.production/' + file, folder + '/' + file);
+          copySync('.production/' + file, folder + '/' + file.replace('.', `-${key}.`));
         }
       }
       console.log('\x1b[36m%s\x1b[0m', 'Yay! Your static Nullstack application is ready.');
