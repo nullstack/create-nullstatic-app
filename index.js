@@ -41,7 +41,7 @@ async function crawl(port, path) {
   const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
   
   const json = `{"instances": ${instances}, "page": ${page}}`;
-  writeFileSync(folder + path + `/${key}.json`, json);
+  writeFileSync(folder + path + '/index.json', json);
 
   const pattern = /<a href="(.*?)"/g;
   while(match=pattern.exec(html)){
@@ -61,10 +61,10 @@ async function crawl(port, path) {
   
 };
 
-async function copyManifest(port) {
-  const response = await fetch(`http://localhost:${port}/manifest.json`);
+async function copyPath(port, path) {
+  const response = await fetch(`http://localhost:${port}${path}`);
   const json = await response.text();
-  writeFileSync(folder + '/manifest.json', json);
+  writeFileSync(folder + path, json);
 }
 
 async function run() {
@@ -73,11 +73,13 @@ async function run() {
   const server = fork('.production/server.js', ['--static'], {silent: true});
   server.stdout.on('data', async (buffer) => {
     const lookup = 'production mode at http://127.0.0.1:';
-    const message = buffer.toString();
+    const message = buffer.toString('utf-8');
     if(message.indexOf(lookup) > -1) {
       const port = parseInt(message.split(lookup)[1]);
       await crawl(port, '/');
-      await copyManifest(port);
+      await crawl(port, `/offline-${key}`);
+      await copyPath(port, `/manifest-${key}.json`);
+      await copyPath(port, `/service-worker-${key}.js`);
       server.kill();
       copySync('public', folder);
       for(const file of readdirSync('.production')) {
