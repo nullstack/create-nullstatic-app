@@ -15,6 +15,8 @@ const {existsSync, mkdirSync, writeFileSync, copySync, readdirSync, rmdirSync} =
 const {execSync, fork} = require('child_process');
 
 let key;
+let project;
+const pages = {};
 
 async function crawl(port, path) {
   
@@ -34,11 +36,18 @@ async function crawl(port, path) {
     key = JSON.parse(environment).key;
   }
 
+  if(project === undefined) {
+    const contextLookup = 'window.context = ';
+    const context = html.split("\n").find((line) => line.indexOf(contextLookup) > -1).split(contextLookup)[1].slice(0, -1);
+    project = JSON.parse(context).project;
+  }
+
   const instancesLookup = 'window.instances = ';
   const instances = html.split("\n").find((line) => line.indexOf(instancesLookup) > -1).split(instancesLookup)[1].slice(0, -1);
 
   const pageLookup = 'window.page = ';
   const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
+  pages[path] = JSON.parse(page);
   
   const json = `{"instances": ${instances}, "page": ${page}}`;
   writeFileSync(folder + path + '/index.json', json);
@@ -67,6 +76,17 @@ async function copyPath(port, path) {
   writeFileSync(folder + path, json);
 }
 
+async function createSitemap() {
+  const timestamp = new Date().toJSON().substring(0,10);
+  const urls = Object.keys(pages).map((path) => {
+    const page = pages[path];
+    const canonical = `https://${project.domain}${path}`;
+    return `<url><loc>${canonical}</loc><lastmod>${timestamp}</lastmod>${page.changes ? `<changefreq>${page.changes}</changefreq>` : ''}${page.priority ? `<priority>${page.priority}</priority>` : ''}</url>`;
+  });
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`;
+  writeFileSync(folder + '/sitemap.xml', xml);
+}
+
 async function run() {
   rmdirSync(folder, {recursive: true});
   await execSync('npm run build');
@@ -80,6 +100,8 @@ async function run() {
       await crawl(port, `/offline-${key}`);
       await copyPath(port, `/manifest-${key}.json`);
       await copyPath(port, `/service-worker-${key}.js`);
+      await copyPath(port, `/robots.txt`);
+      await createSitemap();
       server.kill();
       copySync('public', folder);
       for(const file of readdirSync('.production')) {
