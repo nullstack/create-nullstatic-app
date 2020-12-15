@@ -47,7 +47,10 @@ async function crawl(port, path) {
 
   const pageLookup = 'window.page = ';
   const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
-  pages[path] = JSON.parse(page);
+  
+  if(path !== `/offline-${key}`) {
+    pages[path] = JSON.parse(page);
+  }
   
   const json = `{"instances": ${instances}, "page": ${page}}`;
   writeFileSync(folder + path + '/index.json', json);
@@ -81,7 +84,7 @@ async function createSitemap() {
   const urls = Object.keys(pages).map((path) => {
     const page = pages[path];
     const canonical = `https://${project.domain}${path}`;
-    return `<url><loc>${canonical}</loc><lastmod>${timestamp}</lastmod>${page.changes ? `<changefreq>${page.changes}</changefreq>` : ''}${page.priority ? `<priority>${page.priority}</priority>` : ''}</url>`;
+    return `<url><loc>${canonical}</loc><lastmod>${timestamp}</lastmod>${page.changes ? `<changefreq>${page.changes}</changefreq>` : ''}${page.priority ? `<priority>${page.priority.toFixed(1)}</priority>` : ''}</url>`;
   });
   const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`;
   writeFileSync(folder + '/sitemap.xml', xml);
