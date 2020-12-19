@@ -38,29 +38,25 @@ async function crawl(port, path) {
 
   if(path === '/404') {
     writeFileSync(folder + '/404.html', html);
-
-  } else {
-
-    const instancesLookup = 'window.instances = ';
-    const instances = html.split("\n").find((line) => line.indexOf(instancesLookup) > -1).split(instancesLookup)[1].slice(0, -1);
-
-    const pageLookup = 'window.page = ';
-    const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
-    
-    if(path !== `/offline-${key}`) {
-      pages[path] = JSON.parse(page);
-    }
-
-  
-    if(!existsSync(folder + path)) {
-      mkdirSync(folder + path, {recursive: true});
-    }
-    writeFileSync(folder + path + '/index.html', html);
-
-    const json = `{"instances": ${instances}, "page": ${page}}`;
-    writeFileSync(folder + path + '/index.json', json);
-
   }
+
+  const instancesLookup = 'window.instances = ';
+  const instances = html.split("\n").find((line) => line.indexOf(instancesLookup) > -1).split(instancesLookup)[1].slice(0, -1);
+
+  const pageLookup = 'window.page = ';
+  const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
+  
+  if(path !== `/offline-${key}`) {
+    pages[path] = JSON.parse(page);
+  }
+
+  if(!existsSync(folder + path)) {
+    mkdirSync(folder + path, {recursive: true});
+  }
+  writeFileSync(folder + path + '/index.html', html);
+
+  const json = `{"instances": ${instances}, "page": ${page}}`;
+  writeFileSync(folder + path + '/index.json', json);
 
   const pattern = /<a href="(.*?)"/g;
   while(match=pattern.exec(html)){
