@@ -24,12 +24,6 @@ async function crawl(port, path) {
   const response = await fetch('http://localhost:' + port + path);
   const html = await response.text();
 
-  if(!existsSync(folder + path)) {
-    mkdirSync(folder + path, {recursive: true});
-  }
-
-  writeFileSync(folder + path + '/index.html', html);
-
   if(key === undefined) {
     const environmentLookup = 'window.environment = ';
     const environment = html.split("\n").find((line) => line.indexOf(environmentLookup) > -1).split(environmentLookup)[1].slice(0, -1);
@@ -42,18 +36,31 @@ async function crawl(port, path) {
     project = JSON.parse(context).project;
   }
 
-  const instancesLookup = 'window.instances = ';
-  const instances = html.split("\n").find((line) => line.indexOf(instancesLookup) > -1).split(instancesLookup)[1].slice(0, -1);
+  if(path === '/404') {
+    writeFileSync(folder + '/404.html', html);
 
-  const pageLookup = 'window.page = ';
-  const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
+  } else {
+
+    const instancesLookup = 'window.instances = ';
+    const instances = html.split("\n").find((line) => line.indexOf(instancesLookup) > -1).split(instancesLookup)[1].slice(0, -1);
+
+    const pageLookup = 'window.page = ';
+    const page = html.split("\n").find((line) => line.indexOf(pageLookup) > -1).split(pageLookup)[1].slice(0, -1);
+    
+    if(path !== `/offline-${key}`) {
+      pages[path] = JSON.parse(page);
+    }
+
   
-  if(path !== `/offline-${key}`) {
-    pages[path] = JSON.parse(page);
+    if(!existsSync(folder + path)) {
+      mkdirSync(folder + path, {recursive: true});
+    }
+    writeFileSync(folder + path + '/index.html', html);
+
+    const json = `{"instances": ${instances}, "page": ${page}}`;
+    writeFileSync(folder + path + '/index.json', json);
+
   }
-  
-  const json = `{"instances": ${instances}, "page": ${page}}`;
-  writeFileSync(folder + path + '/index.json', json);
 
   const pattern = /<a href="(.*?)"/g;
   while(match=pattern.exec(html)){
@@ -101,6 +108,7 @@ async function run() {
       const port = parseInt(message.split(lookup)[1]);
       await crawl(port, '/');
       await crawl(port, `/offline-${key}`);
+      await crawl(port, `/404`);
       await copyPath(port, `/manifest-${key}.json`);
       await copyPath(port, `/service-worker-${key}.js`);
       await copyPath(port, `/robots.txt`);
