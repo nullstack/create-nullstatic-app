@@ -31,9 +31,8 @@ async function crawl(port, path) {
   }
 
   if(project === undefined) {
-    const contextLookup = 'window.context = ';
-    const context = html.split("\n").find((line) => line.indexOf(contextLookup) > -1).split(contextLookup)[1].slice(0, -1);
-    project = JSON.parse(context).project;
+    const projectLookup = 'window.project = ';
+    project = JSON.parse(html.split("\n").find((line) => line.indexOf(projectLookup) > -1).split(projectLookup)[1].slice(0, -1));
   }
 
   if(path === '/404') {
