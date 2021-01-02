@@ -59,7 +59,7 @@ async function crawl(port, path) {
 
   const pattern = /<a href="(.*?)"/g;
   while(match=pattern.exec(html)){
-    const link = match[1];
+    const link = match[1].split('#')[0];
     if(link.startsWith('/')) {
       if(links[link] === undefined) {
         links[link] = false;
