@@ -1,5 +1,9 @@
 #! /usr/bin/env node
 
+const fetch = require('node-fetch');
+const {existsSync, readFileSync, mkdirSync, writeFileSync, copySync, readdirSync, rmdirSync} = require('fs-extra');
+const {execSync, fork} = require('child_process');
+
 const folder = process.argv[2] || 'static';
 
 const reserved = ['public', '.production', '.development', 'src'];
@@ -9,10 +13,23 @@ if(reserved.includes(folder)) {
   process.exit();
 }
 
-const fetch = require('node-fetch');
+let isNullstackFolder = true;
+
+if(!existsSync('package.json')) {
+  isNullstackFolder = false;  
+} else {
+  const json = readFileSync('package.json', 'utf-8');
+  if(json.indexOf('nullstack') === -1) {
+    isNullstackFolder = false;
+  }
+}
+
+if(!isNullstackFolder) {
+  console.log('\x1b[31m%s\x1b[0m', `You must be in a Nullstack project folder to run this command`);
+  process.exit();
+}
+
 const links = {};
-const {existsSync, mkdirSync, writeFileSync, copySync, readdirSync, rmdirSync} = require('fs-extra');
-const {execSync, fork} = require('child_process');
 
 let key;
 let project;
