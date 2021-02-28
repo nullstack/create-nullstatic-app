@@ -70,6 +70,9 @@ async function crawl(port, path) {
     mkdirSync(folder + path, {recursive: true});
   }
   writeFileSync(folder + path + '/index.html', html);
+  if(path !== '/') {
+    writeFileSync(folder + path + '.html', html);
+  }
 
   const json = `{"instances": ${instances}, "page": ${page}}`;
   writeFileSync(folder + path + '/index.json', json);
