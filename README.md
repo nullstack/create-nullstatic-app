@@ -12,6 +12,8 @@ npx create-nullstatic-app
 
 The default output folder is "static". 
 
+> If you ran into problems with `npx`, read about [the known `npx` bug](https://nullstack.app/getting-started#the-known-npx-bug).
+
 To select a new folder run:
 
 ```bash
