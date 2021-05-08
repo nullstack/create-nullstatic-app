@@ -36,6 +36,12 @@ let project;
 const pages = {};
 
 async function crawl(port, path) {
+  if(path.indexOf('.') > -1) {
+    console.log(`--> skiping: ${path}`)
+    return;
+  } else {
+    console.log(`--> reading: ${path}`)
+  }
   
   links[path] = true;
   const response = await fetch('http://localhost:' + port + path);
@@ -113,10 +119,14 @@ async function createSitemap() {
 }
 
 async function run() {
-  rmdirSync(folder, {recursive: true});
+  console.log('\x1b[36m%s\x1b[0m', 'Starting the static site generation...');
+  if(existsSync(folder)) {
+    rmdirSync(folder, {recursive: true});
+  }
   await execSync('npm run build');
   const server = fork('.production/server.js', ['--static'], {silent: true});
   server.stdout.on('data', async (buffer) => {
+    console.log('hey?')
     const lookup = 'production mode at http://127.0.0.1:';
     const message = buffer.toString('utf-8');
     if(message.indexOf(lookup) > -1) {
@@ -129,6 +139,7 @@ async function run() {
       await copyPath(port, `/robots.txt`);
       await createSitemap();
       server.kill();
+      console.log(`--> copying: public`)
       copySync('public', folder);
       for(const file of readdirSync('.production')) {
         if(file.startsWith('client')) {
