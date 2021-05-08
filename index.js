@@ -37,7 +37,7 @@ const pages = {};
 
 async function crawl(port, path) {
   if(path.indexOf('.') > -1) {
-    console.log(`--> skiping: ${path}`)
+    console.log(`--> skipping: ${path}`)
     return;
   } else {
     console.log(`--> reading: ${path}`)
