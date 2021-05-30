@@ -1,3 +1,9 @@
+This repository has been archived. You can now set your build script to:
+
+`npx nullstack build --mode=ssg`
+
+Read more about it in the [static site generation documentation](https://nullstack.app/static-site-generation)
+
 <img src='https://raw.githubusercontent.com/nullstack/nullstack/master/nullstack.png' height='60' alt='Nullstack'>
 
 # Create Nullstatic App
